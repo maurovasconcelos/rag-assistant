@@ -10,7 +10,6 @@ def get_gemini_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("A variável GEMINI_API_KEY não está configurada no arquivo .env")
-    # O SDK google-genai busca automaticamente em GEMINI_API_KEY ou podemos passar explicitamente
     return genai.Client(api_key=api_key)
 
 def get_embedding(text: str) -> list[float]:
@@ -21,15 +20,12 @@ def get_embedding(text: str) -> list[float]:
         contents=text,
         config=types.EmbedContentConfig(output_dimensionality=768)
     )
-    # Acessamos o vetor do primeiro embedding gerado
     return response.embeddings[0].values
 
 def anonymize_document(text: str) -> str:
     """Retorna o documento após sanitização de PII (LGPD)."""
     client = get_gemini_client()
-    # Mascara CPFs nativamente com Regex
     text_masked = mask_cpf(text)
-    # Sanitização complementar de PII via IA
     return refine_and_anonymize_text(client, text_masked)
 
 def refine_query(query: str) -> str:

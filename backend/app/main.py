@@ -12,7 +12,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS para o Frontend (Next.js) em localhost:3000
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -21,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Esquema para recebermos o documento via JSON
 class DocumentCreate(BaseModel):
     title: str
     content: str
@@ -34,15 +32,11 @@ def read_root():
 def add_document(doc: DocumentCreate, db: Session = Depends(get_db)):
     """Endpoint para ingestão e vetorização de documentos."""
     try:
-        # Sanitização de dados sensíveis (LGPD)
         safe_content = anonymize_document(doc.content)
-        
-        # Geração de embeddings para o conteúdo sanitizado
         vetor = get_embedding(safe_content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na IA: {str(e)}")
         
-    # Salvar documento e embeddings no Postgres
     db_doc = DocumentModel(
         title=doc.title,
         content=safe_content,
@@ -59,15 +53,11 @@ def ask_assistant(query: str, db: Session = Depends(get_db)):
     """Endpoint para busca semântica e geração de resposta aumentada (RAG)."""
     
     try:
-        # Otimização da query do usuário
         refined_query = refine_query(query)
-        
-        # Vetorização da query
         query_embedding = get_embedding(refined_query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar embedding da pergunta: {str(e)}")
         
-    # Busca semântica baseada na query (cosine_distance via pgvector)
     resultados = db.query(DocumentModel).order_by(
         DocumentModel.embedding.cosine_distance(query_embedding)
     ).limit(3).all()
@@ -75,10 +65,8 @@ def ask_assistant(query: str, db: Session = Depends(get_db)):
     if not resultados:
         return {"answer": "Ainda não tenho nenhum documento na minha base para analisar."}
         
-    # Construção do contexto agrupando os documentos recuperados
     context = "\n\n---\n\n".join([f"Título: {r.title}\n{r.content}" for r in resultados])
     
-    # Geração da resposta via LLM provendo o contexto
     try:
         resposta_final = generate_answer(query, context)
     except Exception as e:

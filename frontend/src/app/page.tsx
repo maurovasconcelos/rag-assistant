@@ -10,6 +10,8 @@ type Message = {
   refined_query?: string;
 };
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -21,7 +23,6 @@ export default function Home() {
   const [inputStr, setInputStr] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Ingestion states
   const [docTitle, setDocTitle] = useState("");
   const [docContent, setDocContent] = useState("");
   const [toastMsg, setToastMsg] = useState("");
@@ -51,7 +52,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/ask/?query=${encodeURIComponent(userMsg.content)}`);
+      const res = await fetch(`${API_BASE_URL}/ask/?query=${encodeURIComponent(userMsg.content)}`);
       if (!res.ok) throw new Error("Erro na API RAG");
 
       const data = await res.json();
@@ -82,7 +83,7 @@ export default function Home() {
     if (!docTitle.trim() || !docContent.trim()) return;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/documents/", {
+      const res = await fetch(`${API_BASE_URL}/documents/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

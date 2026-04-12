@@ -1,13 +1,10 @@
 import re
 
-# Regex pattern para ofuscação de CPFs
 def mask_cpf(text: str) -> str:
     """Busca padrões de CPF e mascara com '***.***.***-**'."""
-    # Regex genérica para CPF no formato XXX.XXX.XXX-XX ou XXXXXXXXXXX
     cpf_pattern = r'\b(?:\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2})\b'
     return re.sub(cpf_pattern, '***.***.***-**', text)
 
-# Sanitização de PII utilizando LLM
 def refine_and_anonymize_text(client, text: str) -> str:
     """
     Utiliza um modelo generativo para identificar e remover 

@@ -6,7 +6,6 @@ const axios = require('axios');
 const PDF_DIR = path.join(__dirname, 'arquivos_pdf');
 const API_URL = 'http://127.0.0.1:8000/documents/';
 
-// Processamento em lote de PDFs e TXTs para vetorização
 async function processAllPdfs() {
     if (!fs.existsSync(PDF_DIR)) {
         fs.mkdirSync(PDF_DIR, { recursive: true });
@@ -39,7 +38,6 @@ async function processAllPdfs() {
 
             console.log(`\n⏳ Extraindo e enviando: ${title} (${content.substring(0, 50).replace(/\n/g, ' ')}...)`);
 
-            // Enviando para nossa API Python
             const response = await axios.post(API_URL, {
                 title: title,
                 content: content
