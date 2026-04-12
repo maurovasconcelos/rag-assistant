@@ -1,17 +1,17 @@
 import re
 
-# Um Guardrail simples e "Hardcoded" para CPFs
+# Regex pattern para ofuscação de CPFs
 def mask_cpf(text: str) -> str:
     """Busca padrões de CPF e mascara com '***.***.***-**'."""
     # Regex genérica para CPF no formato XXX.XXX.XXX-XX ou XXXXXXXXXXX
     cpf_pattern = r'\b(?:\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2})\b'
     return re.sub(cpf_pattern, '***.***.***-**', text)
 
-# Guardrail com IA (Refiner) usando o Gemini local
+# Sanitização de PII utilizando LLM
 def refine_and_anonymize_text(client, text: str) -> str:
     """
-    Usa um prompt focado em LGPD para pedir que a IA remova 
-    informações sensíveis antes de salvar no banco ou processar.
+    Utiliza um modelo generativo para identificar e remover 
+    dados pessoais sensíveis antes do armazenamento ou processamento.
     """
     prompt = f"""Como um agente estrito de segurança de dados (LGPD):
     Revise o texto abaixo e anonimize QUAISQUER dados pessoais sensíveis 

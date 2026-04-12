@@ -14,7 +14,7 @@ def get_gemini_client():
     return genai.Client(api_key=api_key)
 
 def get_embedding(text: str) -> list[float]:
-    """Converte um texto em uma lista de números (embedding) usando o Gemini"""
+    """Gera embeddings vetoriais a partir do texto fornecido."""
     client = get_gemini_client()
     response = client.models.embed_content(
         model="gemini-embedding-001",
@@ -25,17 +25,16 @@ def get_embedding(text: str) -> list[float]:
     return response.embeddings[0].values
 
 def anonymize_document(text: str) -> str:
-    """Passa o texto pelas camadas de segurança LGPD"""
+    """Retorna o documento após sanitização de PII (LGPD)."""
     client = get_gemini_client()
-    # 1. Mascara CPFs nativamente com Regex
+    # Mascara CPFs nativamente com Regex
     text_masked = mask_cpf(text)
-    # 2. IA especializada oculta os demais dados LGPD
+    # Sanitização complementar de PII via IA
     return refine_and_anonymize_text(client, text_masked)
 
 def refine_query(query: str) -> str:
     """
-    Refiner: Passa a pergunta do usuário pelo modelo para deixá-la 
-    mais clara para a busca vetorial.
+    Otimiza a query do usuário para aumentar a precisão da busca semântica.
     """
     client = get_gemini_client()
     prompt = f"Reformule esta pergunta para ser a mais clara e objetiva possível para uma busca em banco de dados: '{query}'. Retorne apenas a pergunta reformulada."

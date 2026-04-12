@@ -6,11 +6,11 @@ const axios = require('axios');
 const PDF_DIR = path.join(__dirname, 'arquivos_pdf');
 const API_URL = 'http://127.0.0.1:8000/documents/';
 
-// Função para ler todos os PDFs e Textos e mandar para o backend RAG
+// Processamento em lote de PDFs e TXTs para vetorização
 async function processAllPdfs() {
     if (!fs.existsSync(PDF_DIR)) {
         fs.mkdirSync(PDF_DIR, { recursive: true });
-        console.log(`[INFO] Criei a pasta '${PDF_DIR}'. Coloque seus PDFs e Textos lá e rode novamente.`);
+        console.log(`[INFO] Diretório '${PDF_DIR}' criado. Insira os arquivos na pasta antes de executar.`);
         return;
     }
 
@@ -45,7 +45,7 @@ async function processAllPdfs() {
                 content: content
             });
 
-            console.log(`✅ Sucesso! Resposta do Backup:`, response.data.message);
+            console.log(`✅ Sucesso! Resposta da API:`, response.data.message);
         } catch (error) {
             console.error(`❌ Erro ao processar o arquivo ${file}:`, error.message);
         }

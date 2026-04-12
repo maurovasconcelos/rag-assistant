@@ -32,17 +32,17 @@ def read_root():
 
 @app.post("/documents/")
 def add_document(doc: DocumentCreate, db: Session = Depends(get_db)):
-    """Rota para ingerir um novo documento e transformá-lo em Embeddings usando IA"""
+    """Endpoint para ingestão e vetorização de documentos."""
     try:
-        # 1. (NOVIDADE) Guardrail LGPD: Limpar dados sensíveis antes de salvar!
+        # Sanitização de dados sensíveis (LGPD)
         safe_content = anonymize_document(doc.content)
         
-        # 2. Enviar o texto seguro pro Gemini transformar em Vetor (Embeddings)
+        # Geração de embeddings para o conteúdo sanitizado
         vetor = get_embedding(safe_content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na IA: {str(e)}")
         
-    # 3. Salvar no Postgres a versão limpa (safe_content) e sua geometria
+    # Salvar documento e embeddings no Postgres
     db_doc = DocumentModel(
         title=doc.title,
         content=safe_content,
@@ -56,19 +56,18 @@ def add_document(doc: DocumentCreate, db: Session = Depends(get_db)):
 
 @app.get("/ask/")
 def ask_assistant(query: str, db: Session = Depends(get_db)):
-    """Rota que recebe a pergunta, busca contextos semelhantes no banco e pede p/ IA responder"""
+    """Endpoint para busca semântica e geração de resposta aumentada (RAG)."""
     
     try:
-        # 1. (NOVIDADE) Refiner: Melhorar a pergunta do usuário
+        # Otimização da query do usuário
         refined_query = refine_query(query)
         
-        # 2. Transformar a pergunta refinada no mesmo formato matemático (Vetor)
+        # Vetorização da query
         query_embedding = get_embedding(refined_query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar embedding da pergunta: {str(e)}")
         
-    # 3. Busca Semântica no banco baseada na pergunta refinada
-    # Usamos o 'cosine_distance' do pgvector
+    # Busca semântica baseada na query (cosine_distance via pgvector)
     resultados = db.query(DocumentModel).order_by(
         DocumentModel.embedding.cosine_distance(query_embedding)
     ).limit(3).all()
@@ -76,10 +75,10 @@ def ask_assistant(query: str, db: Session = Depends(get_db)):
     if not resultados:
         return {"answer": "Ainda não tenho nenhum documento na minha base para analisar."}
         
-    # 3. Montar o "Contexto", fundindo os textos encontrados para a IA ler
+    # Construção do contexto agrupando os documentos recuperados
     context = "\n\n---\n\n".join([f"Título: {r.title}\n{r.content}" for r in resultados])
     
-    # 5. Enviar a pergunta original + os textos filtrados para o LLM responder
+    # Geração da resposta via LLM provendo o contexto
     try:
         resposta_final = generate_answer(query, context)
     except Exception as e:

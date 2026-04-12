@@ -1,12 +1,12 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-// Configuração básica de um Servidor MCP que expõe ferramentas para a IA
+// Server configuration via Model Context Protocol (MCP)
 
 const app = express();
 app.use(express.json());
 
-// Nosso servidor MCP terá 1 Ferramenta Principal: Ler um arquivo local
+// Ferramentas do sistema local expostas via MCP
 const mcpTools = [
     {
         name: "read_local_file",
