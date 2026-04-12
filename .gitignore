@@ -1,0 +1,16 @@
+# Ambientes virtuais e pacotes Python
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# Chaves de API e Variáveis de Ambiente
+.env
+
+# Dependências e caches do Node/Next.js
+node_modules/
+.next/
+*.log
+
+# Arquivos locais não rastreados
+arquivos_pdf/
+.DS_Store

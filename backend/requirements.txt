@@ -1,0 +1,9 @@
+fastapi==0.111.1
+uvicorn==0.30.1
+pydantic==2.8.2
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+google-genai==0.3.0
+sqlalchemy==2.0.31
+psycopg[binary]>=3.2.4
+pgvector==0.3.1
