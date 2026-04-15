@@ -1,16 +1,22 @@
-import os
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .guardrails import refine_and_anonymize_text, mask_cpf
-
-load_dotenv()
+from .config import settings
 
 def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("A variável GEMINI_API_KEY não está configurada no arquivo .env")
-    return genai.Client(api_key=api_key)
+    if not settings.GEMINI_API_KEY:
+        raise ValueError("A variável GEMINI_API_KEY não está configurada.")
+    return genai.Client(api_key=settings.GEMINI_API_KEY)
+
+def chunk_text(text: str) -> list[str]:
+    """Fatia textos longos sem quebrar o sentido semântico das frases."""
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200,
+        separators=["\n\n", "\n", ".", "!", "?", " ", ""]
+    )
+    return text_splitter.split_text(text)
 
 def get_embedding(text: str) -> list[float]:
     """Gera embeddings vetoriais a partir do texto fornecido."""

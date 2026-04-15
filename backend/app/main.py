@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from .database import get_db
 from .models import DocumentModel
-from .ai import get_embedding, generate_answer, anonymize_document, refine_query
+from .ai import get_embedding, generate_answer, anonymize_document, refine_query, chunk_text
 
 app = FastAPI(
     title="RAG Assistant API",
@@ -30,23 +30,27 @@ def read_root():
 
 @app.post("/documents/")
 def add_document(doc: DocumentCreate, db: Session = Depends(get_db)):
-    """Endpoint para ingestão e vetorização de documentos."""
+    """Endpoint para ingestão e vetorização de documentos com Chunking."""
     try:
         safe_content = anonymize_document(doc.content)
-        vetor = get_embedding(safe_content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro na IA: {str(e)}")
+        chunks = chunk_text(safe_content)
         
-    db_doc = DocumentModel(
-        title=doc.title,
-        content=safe_content,
-        embedding=vetor
-    )
-    db.add(db_doc)
-    db.commit()
-    db.refresh(db_doc)
-    
-    return {"message": "Documento adicionado e vetorizado com sucesso!", "id": db_doc.id}
+        db_docs = []
+        for index, chunk in enumerate(chunks):
+            vetor = get_embedding(chunk)
+            db_doc = DocumentModel(
+                title=f"{doc.title} (Parte {index+1})" if len(chunks) > 1 else doc.title,
+                content=chunk,
+                embedding=vetor
+            )
+            db.add(db_doc)
+            db_docs.append(db_doc)
+            
+        db.commit()
+        return {"message": f"Documento '{doc.title}' fatiado em {len(chunks)} chunks e vetorizado com sucesso!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro na IA/Processamento: {str(e)}")
 
 @app.get("/ask/")
 def ask_assistant(query: str, db: Session = Depends(get_db)):

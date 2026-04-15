@@ -1,13 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
+from .config import settings
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://rag_user:rag_password@localhost:5432/rag_db")
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
