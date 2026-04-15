@@ -37,10 +37,11 @@ app.post("/mcp/execute", (req, res) => {
 
     if (tool_name === "read_local_file") {
         try {
-            const fullPath = path.resolve(__dirname, parameters.file_path);
+            const projectRoot = path.resolve(__dirname, "..");
+            const fullPath = path.resolve(projectRoot, parameters.file_path);
 
-            if (fullPath.includes("C:\\Windows") || fullPath.includes("/etc/")) {
-                return res.status(403).json({ error: "Acesso negado pela segurança do MCP." });
+            if (!fullPath.startsWith(projectRoot)) {
+                return res.status(403).json({ error: "Access Denied: Path Traversal attempt intercepted." });
             }
 
             const content = fs.readFileSync(fullPath, "utf-8");
